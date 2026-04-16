@@ -1,4 +1,10 @@
 import os
+
+# --- Memory optimization for deployment (Render free tier = 512MB) ---
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'          # Suppress TF logs
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'          # Reduce memory
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'           # Force CPU only
+
 import re
 import pickle
 import numpy as np
@@ -7,6 +13,7 @@ from nltk.corpus import stopwords
 from flask import Flask, render_template, request, jsonify
 
 import tensorflow as tf
+tf.get_logger().setLevel('ERROR')
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Embedding, LSTM, Dense, Bidirectional
