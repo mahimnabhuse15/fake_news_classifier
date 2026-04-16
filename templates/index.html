@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI-powered Fake News Detection using deep learning with multi-signal analysis: content classification, AI text detection, and linguistic analysis.">
+    <title>Fake News Detector — AI-Powered Multi-Signal Analysis</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --border-subtle: rgba(255, 255, 255, 0.06);
+            --border-glow: rgba(139, 92, 246, 0.3);
+            --text-primary: #f0f0f5;
+            --text-secondary: #8a8a9a;
+            --text-muted: #5a5a6a;
+            --accent-purple: #8b5cf6;
+            --accent-purple-light: #a78bfa;
+            --accent-cyan: #22d3ee;
+            --accent-green: #34d399;
+            --accent-red: #f87171;
+            --accent-orange: #fb923c;
+            --accent-yellow: #fbbf24;
+            --gradient-purple: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+            --gradient-hero: linear-gradient(135deg, #8b5cf6 0%, #22d3ee 50%, #8b5cf6 100%);
+            --shadow-glow: 0 0 40px rgba(139, 92, 246, 0.15);
+            --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+            --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Background */
+        .bg-grid {
+            position: fixed; inset: 0; z-index: 0;
+            background-image:
+                linear-gradient(rgba(139, 92, 246, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(139, 92, 246, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 40%, transparent 100%);
+        }
+        .bg-orb { position: fixed; border-radius: 50%; filter: blur(120px); z-index: 0; animation: orbFloat 20s ease-in-out infinite; }
+        .bg-orb-1 { width: 600px; height: 600px; background: rgba(139, 92, 246, 0.08); top: -200px; left: -100px; }
+        .bg-orb-2 { width: 500px; height: 500px; background: rgba(34, 211, 238, 0.06); bottom: -200px; right: -100px; animation-delay: -10s; }
+        .bg-orb-3 { width: 300px; height: 300px; background: rgba(139, 92, 246, 0.05); top: 50%; left: 50%; transform: translate(-50%, -50%); animation-delay: -5s; }
+        @keyframes orbFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.05); }
+            66% { transform: translate(-20px, 20px) scale(0.95); }
+        }
+
+        /* Layout */
+        .container { position: relative; z-index: 1; max-width: 780px; margin: 0 auto; padding: 40px 24px 60px; }
+
+        /* Header */
+        .header { text-align: center; margin-bottom: 48px; animation: fadeUp 0.8s ease-out; }
+        .header-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 6px 16px; border-radius: 100px;
+            background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.2);
+            font-size: 0.75rem; font-weight: 600; color: var(--accent-purple-light);
+            letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 20px;
+        }
+        .header-badge .pulse-dot { width: 6px; height: 6px; background: var(--accent-green); border-radius: 50%; animation: pulse 2s ease-in-out infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.8); } }
+
+        .header h1 {
+            font-size: clamp(2rem, 5vw, 3rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; margin-bottom: 12px;
+            background: var(--gradient-hero); background-size: 200% 200%;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            animation: gradientShift 6s ease-in-out infinite;
+        }
+        @keyframes gradientShift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+        .header p { font-size: 1.05rem; color: var(--text-secondary); max-width: 520px; margin: 0 auto; }
+
+
+
+        /* Stats bar */
+        .stats-bar { display: flex; justify-content: center; gap: 32px; margin-bottom: 40px; animation: fadeUp 0.8s ease-out 0.1s both; }
+        .stat-item { text-align: center; }
+        .stat-value { font-size: 1.25rem; font-weight: 700; color: var(--text-primary); }
+        .stat-value .highlight { color: var(--accent-purple-light); }
+        .stat-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
+        .stat-divider { width: 1px; background: var(--border-subtle); align-self: stretch; }
+
+        /* Card */
+        .card {
+            background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-xl);
+            padding: 32px; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            box-shadow: var(--shadow-card); transition: border-color 0.3s ease; animation: fadeUp 0.8s ease-out 0.2s both;
+        }
+        .card:focus-within { border-color: var(--border-glow); box-shadow: var(--shadow-card), var(--shadow-glow); }
+
+        /* Textarea */
+        .input-group { margin-bottom: 24px; }
+        .input-label { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+        .input-label span { font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); }
+        .char-count { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; font-variant-numeric: tabular-nums; }
+
+        textarea {
+            width: 100%; min-height: 200px; padding: 18px 20px;
+            background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg); color: var(--text-primary);
+            font-family: var(--font); font-size: 0.95rem; line-height: 1.7;
+            resize: vertical; transition: all 0.3s ease; outline: none;
+        }
+        textarea::placeholder { color: var(--text-muted); }
+        textarea:focus { border-color: rgba(139, 92, 246, 0.4); background: rgba(139, 92, 246, 0.03); box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.08); }
+
+        /* Sample buttons */
+        .samples { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+        .samples-label { width: 100%; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; margin-bottom: 2px; }
+        .sample-btn {
+            padding: 6px 14px; border-radius: 100px; border: 1px solid var(--border-subtle);
+            background: transparent; color: var(--text-secondary); font-family: var(--font);
+            font-size: 0.78rem; font-weight: 500; cursor: pointer; transition: all 0.25s ease; white-space: nowrap;
+        }
+        .sample-btn:hover { background: rgba(139, 92, 246, 0.1); border-color: rgba(139, 92, 246, 0.3); color: var(--accent-purple-light); transform: translateY(-1px); }
+
+        /* Analyze button */
+        .btn-analyze {
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            width: 100%; padding: 16px 32px; border: none; border-radius: var(--radius-md);
+            background: var(--gradient-purple); color: white; font-family: var(--font);
+            font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;
+            position: relative; overflow: hidden;
+        }
+        .btn-analyze::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%); opacity: 0; transition: opacity 0.3s ease; }
+        .btn-analyze:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(139, 92, 246, 0.35); }
+        .btn-analyze:hover::before { opacity: 1; }
+        .btn-analyze:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+        .spinner { display: none; width: 20px; height: 20px; border: 2.5px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; }
+        .btn-analyze.loading .spinner { display: block; }
+        .btn-analyze.loading .btn-text, .btn-analyze.loading .btn-icon { display: none; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Error */
+        .error-msg { display: none; margin-top: 16px; padding: 12px 16px; border-radius: var(--radius-sm); background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.2); color: var(--accent-red); font-size: 0.85rem; font-weight: 500; text-align: center; }
+        .error-msg.visible { display: block; animation: shake 0.4s ease-out; }
+        @keyframes shake { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(4px); } }
+
+        /* ============================================================
+           RESULT SECTION
+           ============================================================ */
+        .result-section { margin-top: 32px; display: none; }
+        .result-section.visible { display: block; animation: fadeUp 0.6s ease-out; }
+
+
+
+        /* Main verdict card */
+        .result-card {
+            border-radius: var(--radius-lg); padding: 32px; text-align: center;
+            border: 1px solid; position: relative; overflow: hidden;
+        }
+        .result-card::before { content: ''; position: absolute; inset: 0; opacity: 0.03; z-index: 0; }
+        .result-card > * { position: relative; z-index: 1; }
+        .result-card.fake { background: rgba(248,113,113,0.05); border-color: rgba(248,113,113,0.15); }
+        .result-card.fake::before { background: radial-gradient(circle at 50% 0%, var(--accent-red), transparent 70%); }
+        .result-card.real { background: rgba(52,211,153,0.05); border-color: rgba(52,211,153,0.15); }
+        .result-card.real::before { background: radial-gradient(circle at 50% 0%, var(--accent-green), transparent 70%); }
+
+        .verdict-icon { font-size: 3rem; margin-bottom: 8px; animation: popIn 0.5s ease-out 0.2s both; }
+        @keyframes popIn { 0% { transform: scale(0); opacity: 0; } 50% { transform: scale(1.2); } 100% { transform: scale(1); opacity: 1; } }
+        .verdict-label { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 4px; }
+        .result-card.fake .verdict-label { color: var(--accent-red); }
+        .result-card.real .verdict-label { color: var(--accent-green); }
+        .verdict-subtitle { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 28px; }
+
+        /* Gauge */
+        .gauge-container { display: flex; justify-content: center; margin-bottom: 24px; }
+        .gauge-wrapper { position: relative; width: 160px; height: 160px; }
+        .gauge-svg { transform: rotate(-90deg); width: 160px; height: 160px; }
+        .gauge-bg { fill: none; stroke: rgba(255,255,255,0.05); stroke-width: 10; }
+        .gauge-fill { fill: none; stroke-width: 10; stroke-linecap: round; stroke-dasharray: 408.41; stroke-dashoffset: 408.41; transition: stroke-dashoffset 1.5s cubic-bezier(0.16, 1, 0.3, 1); }
+        .result-card.fake .gauge-fill { stroke: var(--accent-red); }
+        .result-card.real .gauge-fill { stroke: var(--accent-green); }
+        .gauge-text { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .gauge-percent { font-size: 2.2rem; font-weight: 800; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+        .result-card.fake .gauge-percent { color: var(--accent-red); }
+        .result-card.real .gauge-percent { color: var(--accent-green); }
+        .gauge-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; }
+
+        /* Probability bars */
+        .prob-bars { display: flex; flex-direction: column; gap: 12px; }
+        .prob-row { display: flex; align-items: center; gap: 12px; }
+        .prob-label { font-size: 0.8rem; font-weight: 600; width: 50px; text-align: right; color: var(--text-secondary); }
+        .prob-track { flex: 1; height: 8px; background: rgba(255,255,255,0.05); border-radius: 100px; overflow: hidden; }
+        .prob-fill { height: 100%; border-radius: 100px; width: 0%; transition: width 1.2s cubic-bezier(0.16, 1, 0.3, 1); }
+        .prob-fill.real-bar { background: var(--accent-green); }
+        .prob-fill.fake-bar { background: var(--accent-red); }
+        .prob-value { font-size: 0.8rem; font-weight: 700; width: 48px; font-variant-numeric: tabular-nums; color: var(--text-secondary); }
+
+        /* ============================================================
+           SIGNALS BREAKDOWN
+           ============================================================ */
+        .signals-section { margin-top: 20px; animation: fadeUp 0.6s ease-out 0.3s both; }
+        .signals-title {
+            font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;
+            letter-spacing: 0.08em; font-weight: 600; margin-bottom: 14px; text-align: center;
+        }
+        .signals-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+
+        .signal-card {
+            background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md); padding: 16px; text-align: center;
+            transition: all 0.3s ease;
+        }
+        .signal-card:hover { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.1); }
+        .signal-icon { font-size: 1.5rem; margin-bottom: 8px; }
+        .signal-name { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; margin-bottom: 6px; }
+        .signal-value { font-size: 1.1rem; font-weight: 700; margin-bottom: 2px; }
+        .signal-detail { font-size: 0.72rem; color: var(--text-muted); }
+
+        .signal-value.good { color: var(--accent-green); }
+        .signal-value.warn { color: var(--accent-yellow); }
+        .signal-value.bad { color: var(--accent-red); }
+        .signal-value.neutral { color: var(--accent-cyan); }
+
+        /* Linguistic details (collapsible) */
+        .details-toggle {
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            margin-top: 16px; padding: 8px 16px; border-radius: 100px;
+            background: transparent; border: 1px solid var(--border-subtle);
+            color: var(--text-muted); font-family: var(--font); font-size: 0.75rem;
+            font-weight: 500; cursor: pointer; transition: all 0.25s ease;
+            margin-left: auto; margin-right: auto;
+        }
+        .details-toggle:hover { border-color: rgba(139, 92, 246, 0.3); color: var(--accent-purple-light); }
+        .details-panel { display: none; margin-top: 14px; }
+        .details-panel.visible { display: block; animation: fadeUp 0.3s ease-out; }
+
+        .detail-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 8px 0; border-bottom: 1px solid var(--border-subtle);
+        }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-name { font-size: 0.8rem; color: var(--text-secondary); }
+        .detail-val { font-size: 0.8rem; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--text-primary); }
+
+        /* Disclaimer */
+        .disclaimer {
+            margin-top: 20px; padding: 14px 18px; border-radius: var(--radius-md);
+            background: rgba(139, 92, 246, 0.04); border: 1px solid rgba(139, 92, 246, 0.12);
+            font-size: 0.78rem; color: var(--text-muted); line-height: 1.6; text-align: center;
+        }
+        .disclaimer strong { color: var(--text-secondary); }
+
+        /* Footer */
+        .footer { text-align: center; margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border-subtle); animation: fadeUp 0.8s ease-out 0.4s both; }
+        .footer p { font-size: 0.78rem; color: var(--text-muted); line-height: 1.7; }
+        .tech-stack { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+        .tech-tag { padding: 4px 12px; border-radius: 100px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); font-size: 0.7rem; color: var(--text-muted); font-weight: 500; }
+
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .container { padding: 24px 16px 40px; }
+            .card, .result-card { padding: 24px 20px; }
+            .stats-bar { gap: 20px; }
+            .stat-value { font-size: 1.05rem; }
+            .gauge-wrapper, .gauge-svg { width: 130px; height: 130px; }
+            .gauge-percent { font-size: 1.8rem; }
+            .signals-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-grid"></div>
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+    <div class="bg-orb bg-orb-3"></div>
+
+    <div class="container">
+
+        <!-- Header -->
+        <header class="header">
+            <div class="header-badge">
+                <span class="pulse-dot"></span>
+                Multi-Signal Analysis
+            </div>
+            <h1>Fake News Detector</h1>
+            <p>Paste any news article for multi-signal analysis: content classification, AI detection, and linguistic profiling.</p>
+        </header>
+
+
+
+        <!-- Stats -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-value"><span class="highlight">3</span></div>
+                <div class="stat-label">Signal Sources</div>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <div class="stat-value">Deep Learning</div>
+                <div class="stat-label">Classification</div>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <div class="stat-value">AI Detect</div>
+                <div class="stat-label">Text Analysis</div>
+            </div>
+        </div>
+
+        <!-- Main Card -->
+        <div class="card">
+            <div class="input-group">
+                <div class="input-label">
+                    <span>📰 Paste News Article</span>
+                    <span class="char-count" id="charCount">0 characters</span>
+                </div>
+                <textarea id="newsInput" placeholder="Paste a news article here to run multi-signal analysis..." spellcheck="false"></textarea>
+            </div>
+
+            <div class="samples">
+                <div class="samples-label">Try a sample →</div>
+                <button class="sample-btn" id="sampleReal" onclick="loadSample('real')">✅ Real News</button>
+                <button class="sample-btn" id="sampleFake" onclick="loadSample('fake')">❌ Fake News</button>
+                <button class="sample-btn" id="sampleAI" onclick="loadSample('ai_fake')">🤖 AI-Generated Fake</button>
+            </div>
+
+            <button class="btn-analyze" id="analyzeBtn" onclick="analyzeNews()">
+                <span class="btn-icon">🔍</span>
+                <span class="btn-text">Analyze Article</span>
+                <div class="spinner"></div>
+            </button>
+
+            <div class="error-msg" id="errorMsg"></div>
+        </div>
+
+        <!-- Result Section -->
+        <div class="result-section" id="resultSection">
+
+
+
+            <!-- Verdict Card -->
+            <div class="result-card" id="resultCard">
+                <div class="verdict-icon" id="verdictIcon"></div>
+                <div class="verdict-label" id="verdictLabel"></div>
+                <div class="verdict-subtitle" id="verdictSubtitle"></div>
+
+                <div class="gauge-container">
+                    <div class="gauge-wrapper">
+                        <svg class="gauge-svg" viewBox="0 0 140 140">
+                            <circle class="gauge-bg" cx="70" cy="70" r="65" />
+                            <circle class="gauge-fill" id="gaugeFill" cx="70" cy="70" r="65" />
+                        </svg>
+                        <div class="gauge-text">
+                            <div class="gauge-percent" id="gaugePercent">0%</div>
+                            <div class="gauge-label">Confidence</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="prob-bars">
+                    <div class="prob-row">
+                        <div class="prob-label">Real</div>
+                        <div class="prob-track"><div class="prob-fill real-bar" id="realBar"></div></div>
+                        <div class="prob-value" id="realValue">0%</div>
+                    </div>
+                    <div class="prob-row">
+                        <div class="prob-label">Fake</div>
+                        <div class="prob-track"><div class="prob-fill fake-bar" id="fakeBar"></div></div>
+                        <div class="prob-value" id="fakeValue">0%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Signals Breakdown -->
+            <div class="signals-section" id="signalsSection">
+                <div class="signals-title">📊 Analysis Breakdown</div>
+                <div class="signals-grid">
+                    <!-- Content Analysis -->
+                    <div class="signal-card">
+                        <div class="signal-icon">🧠</div>
+                        <div class="signal-name">Content Analysis</div>
+                        <div class="signal-value" id="sigContentValue">—</div>
+                        <div class="signal-detail" id="sigContentDetail">Model prediction</div>
+                    </div>
+                    <!-- AI Detection -->
+                    <div class="signal-card">
+                        <div class="signal-icon">🤖</div>
+                        <div class="signal-name">AI Detection</div>
+                        <div class="signal-value" id="sigAIValue">—</div>
+                        <div class="signal-detail" id="sigAIDetail">Statistical analysis</div>
+                    </div>
+                    <!-- Linguistic -->
+                    <div class="signal-card">
+                        <div class="signal-icon">📝</div>
+                        <div class="signal-name">Writing Style</div>
+                        <div class="signal-value" id="sigLingValue">—</div>
+                        <div class="signal-detail" id="sigLingDetail">Burstiness score</div>
+                    </div>
+                </div>
+
+                <!-- Details toggle -->
+                <button class="details-toggle" onclick="toggleDetails()">
+                    <span id="detailsArrow">▼</span> Show Linguistic Details
+                </button>
+                <div class="details-panel" id="detailsPanel">
+                    <div class="detail-row"><span class="detail-name">Burstiness (sentence variance)</span><span class="detail-val" id="detBurstiness">—</span></div>
+                    <div class="detail-row"><span class="detail-name">Vocabulary Richness (TTR)</span><span class="detail-val" id="detVocab">—</span></div>
+                    <div class="detail-row"><span class="detail-name">Avg Sentence Length</span><span class="detail-val" id="detAvgSent">—</span></div>
+                    <div class="detail-row"><span class="detail-name">Sentence Length Std Dev</span><span class="detail-val" id="detSentStd">—</span></div>
+                    <div class="detail-row"><span class="detail-name">Repetition Score</span><span class="detail-val" id="detRepetition">—</span></div>
+                    <div class="detail-row"><span class="detail-name">Punctuation Diversity</span><span class="detail-val" id="detPunct">—</span></div>
+                    <div class="detail-row"><span class="detail-name">Sentence Opener Diversity</span><span class="detail-val" id="detOpener">—</span></div>
+                </div>
+            </div>
+
+            <!-- Disclaimer -->
+            <div class="disclaimer">
+                <strong>⚠️ Important:</strong> This tool analyzes <strong>writing patterns</strong>, not factual accuracy.
+                It cannot verify whether specific claims are true. Always cross-check important news with
+                <strong>trusted fact-checkers</strong> like PolitiFact, Snopes, or FactCheck.org.
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Multi-signal fake news analysis powered by deep learning &amp; statistical NLP.</p>
+            <div class="tech-stack">
+                <span class="tech-tag">DistilBERT / LSTM</span>
+                <span class="tech-tag">AI Detection</span>
+                <span class="tech-tag">NLP Analytics</span>
+                <span class="tech-tag">Flask</span>
+            </div>
+        </footer>
+
+    </div>
+
+    <script>
+        const newsInput     = document.getElementById('newsInput');
+        const charCount     = document.getElementById('charCount');
+        const analyzeBtn    = document.getElementById('analyzeBtn');
+        const errorMsg      = document.getElementById('errorMsg');
+        const resultSection = document.getElementById('resultSection');
+        const resultCard    = document.getElementById('resultCard');
+        const verdictIcon   = document.getElementById('verdictIcon');
+        const verdictLabel  = document.getElementById('verdictLabel');
+        const verdictSubtitle = document.getElementById('verdictSubtitle');
+        const gaugeFill     = document.getElementById('gaugeFill');
+        const gaugePercent  = document.getElementById('gaugePercent');
+        const realBar       = document.getElementById('realBar');
+        const fakeBar       = document.getElementById('fakeBar');
+        const realValue     = document.getElementById('realValue');
+        const fakeValue     = document.getElementById('fakeValue');
+
+
+
+        const samples = {
+            real: `The United Nations released its annual climate report on Wednesday, warning that global temperatures could rise by 1.5 degrees Celsius above pre-industrial levels within the next decade if greenhouse gas emissions are not significantly reduced. The report, authored by over 200 scientists from 65 countries, calls for immediate action from world governments to transition to renewable energy sources. UN Secretary-General urged nations to honor their commitments under the Paris Agreement and accelerate plans to cut carbon emissions by at least 45 percent by 2030.`,
+
+            fake: `BREAKING: Scientists at MIT have discovered that drinking coffee before bed actually helps you sleep better! A groundbreaking study involving 10,000 participants showed that consuming three cups of espresso right before sleeping increased deep sleep by 400%. The researchers claim this overturns decades of sleep science. Major pharmaceutical companies are reportedly furious as this could destroy the sleeping pill industry overnight. The FDA has been forced to change all its guidelines immediately.`,
+
+            ai_fake: `A recent study published in the Journal of Advanced Medicine has revealed that a common household spice may hold the key to preventing Alzheimer's disease. The research, conducted over a period of five years at a leading university, involved more than 2,000 participants across multiple countries. The findings suggest that daily consumption of this particular spice resulted in a significant reduction in cognitive decline among elderly participants. The lead researcher stated that these results could revolutionize the approach to treating neurodegenerative diseases. Health organizations around the world are now reviewing these findings to determine whether new dietary guidelines should be established. The pharmaceutical industry has expressed interest in developing supplements based on these findings.`
+        };
+
+        newsInput.addEventListener('input', () => {
+            const len = newsInput.value.length;
+            charCount.textContent = `${len.toLocaleString()} character${len !== 1 ? 's' : ''}`;
+        });
+
+        function loadSample(type) {
+            newsInput.value = samples[type];
+            newsInput.dispatchEvent(new Event('input'));
+            newsInput.focus();
+            hideError();
+            resultSection.classList.remove('visible');
+        }
+
+        function showError(msg) { errorMsg.textContent = msg; errorMsg.classList.add('visible'); }
+        function hideError() { errorMsg.classList.remove('visible'); }
+
+        function animateCounter(element, target, suffix = '%', duration = 1200) {
+            const startTime = performance.now();
+            function update(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+                element.textContent = Math.round(target * eased) + suffix;
+                if (progress < 1) requestAnimationFrame(update);
+            }
+            requestAnimationFrame(update);
+        }
+
+        function toggleDetails() {
+            const panel = document.getElementById('detailsPanel');
+            const arrow = document.getElementById('detailsArrow');
+            panel.classList.toggle('visible');
+            arrow.textContent = panel.classList.contains('visible') ? '▲' : '▼';
+        }
+
+        async function analyzeNews() {
+            const text = newsInput.value.trim();
+            hideError();
+
+            if (!text) { showError('Please paste a news article to analyze.'); return; }
+            if (text.split(/\s+/).length < 10) { showError('Please enter a longer article (at least 10 words) for accurate analysis.'); return; }
+
+            analyzeBtn.classList.add('loading');
+            analyzeBtn.disabled = true;
+            resultSection.classList.remove('visible');
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text })
+                });
+
+                if (!response.ok) throw new Error('Server error. Please try again.');
+                const data = await response.json();
+                if (data.error) throw new Error(data.error);
+                displayResult(data);
+
+            } catch (err) {
+                showError(err.message || 'Something went wrong. Please try again.');
+            } finally {
+                analyzeBtn.classList.remove('loading');
+                analyzeBtn.disabled = false;
+            }
+        }
+
+        function displayResult(data) {
+            const isFake = data.label === 'Fake';
+            const confidencePercent = Math.round(data.confidence * 100);
+            const realPercent = Math.round(data.signals.content_analysis.real_probability * 100);
+            const fakePercent = Math.round(data.signals.content_analysis.fake_probability * 100);
+            const signals = data.signals;
+
+
+
+            // Verdict
+            resultCard.className = `result-card ${isFake ? 'fake' : 'real'}`;
+            verdictIcon.textContent = isFake ? '🚨' : '✅';
+            verdictLabel.textContent = isFake ? 'Likely Fake News' : 'Likely Real News';
+            verdictSubtitle.textContent = isFake
+                ? 'Our analysis detected patterns commonly found in misinformation.'
+                : 'This article appears to follow patterns of legitimate journalism.';
+
+            // Reset gauge
+            const circumference = 2 * Math.PI * 65;
+            gaugeFill.style.strokeDashoffset = circumference;
+
+            resultSection.classList.add('visible');
+
+            setTimeout(() => resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+
+            setTimeout(() => {
+                gaugeFill.style.strokeDashoffset = circumference - (confidencePercent / 100) * circumference;
+                animateCounter(gaugePercent, confidencePercent, '%');
+            }, 300);
+
+            setTimeout(() => {
+                realBar.style.width = realPercent + '%';
+                fakeBar.style.width = fakePercent + '%';
+                animateCounter(realValue, realPercent, '%');
+                animateCounter(fakeValue, fakePercent, '%');
+            }, 500);
+
+            // --- Signals Breakdown ---
+            // Content Analysis
+            const contentEl = document.getElementById('sigContentValue');
+            contentEl.textContent = signals.content_analysis.label;
+            contentEl.className = 'signal-value ' + (signals.content_analysis.label === 'Fake' ? 'bad' : 'good');
+            document.getElementById('sigContentDetail').textContent =
+                `${Math.round(signals.content_analysis.confidence * 100)}% confidence (${data.model_used.toUpperCase()})`;
+
+            // AI Detection
+            const aiScore = Math.round(signals.ai_detection.score * 100);
+            const aiEl = document.getElementById('sigAIValue');
+            aiEl.textContent = aiScore + '%';
+            aiEl.className = 'signal-value ' + (aiScore >= 60 ? 'bad' : aiScore >= 40 ? 'warn' : 'good');
+            document.getElementById('sigAIDetail').textContent = signals.ai_detection.label;
+
+            // Linguistic
+            const bust = signals.ai_detection.burstiness;
+            const lingEl = document.getElementById('sigLingValue');
+            lingEl.textContent = bust.toFixed(2);
+            lingEl.className = 'signal-value ' + (bust >= 0.5 ? 'good' : bust >= 0.3 ? 'warn' : 'bad');
+            document.getElementById('sigLingDetail').textContent =
+                bust >= 0.5 ? 'Natural variation' : bust >= 0.3 ? 'Somewhat uniform' : 'Very uniform (AI-like)';
+
+            // Linguistic detail panel
+            document.getElementById('detBurstiness').textContent = signals.ai_detection.burstiness.toFixed(4);
+            document.getElementById('detVocab').textContent = signals.ai_detection.vocab_richness.toFixed(4);
+            document.getElementById('detAvgSent').textContent = signals.linguistic.avg_sentence_length.toFixed(1) + ' words';
+            document.getElementById('detSentStd').textContent = signals.linguistic.sentence_length_std.toFixed(2);
+            document.getElementById('detRepetition').textContent = signals.linguistic.repetition_score.toFixed(4);
+            document.getElementById('detPunct').textContent = signals.linguistic.punctuation_diversity.toFixed(4);
+            document.getElementById('detOpener').textContent = signals.linguistic.opener_diversity.toFixed(4);
+        }
+
+        newsInput.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') analyzeNews();
+        });
+    </script>
+
+</body>
+</html>
