@@ -1,6 +1,6 @@
 import os
 import re
-import pickle
+import json
 import numpy as np
 import nltk
 from nltk.corpus import stopwords
@@ -13,8 +13,9 @@ from ai_detector import analyze_text as detect_ai
 # Configuration
 # ---------------------------------------------------------------------------
 MAX_LEN = 500
+NUM_WORDS = 5000
 MODEL_ONNX_PATH = "model.onnx"
-TOKENIZER_PATH = "tokenizer.pkl"
+TOKENIZER_PATH = "tokenizer.json"
 
 # ---------------------------------------------------------------------------
 # Download NLTK data (only runs once)
@@ -29,9 +30,11 @@ print("🧠 Loading ONNX model...")
 session = ort.InferenceSession(MODEL_ONNX_PATH)
 INPUT_NAME = session.get_inputs()[0].name
 
-# Load tokenizer
-with open(TOKENIZER_PATH, "rb") as f:
-    tokenizer = pickle.load(f)
+# Load tokenizer (JSON — no TensorFlow dependency)
+with open(TOKENIZER_PATH, "r") as f:
+    tk_data = json.load(f)
+    word_index = tk_data["word_index"]
+    num_words = tk_data.get("num_words", NUM_WORDS)
 
 print("✅ ONNX model loaded successfully!")
 
@@ -58,13 +61,27 @@ def pad_sequences_manual(seq, maxlen):
     return np.array(result, dtype=np.float32)
 
 
+def texts_to_sequences_manual(texts, word_index, num_words):
+    """Convert texts to sequences using word_index dict, capping at num_words."""
+    sequences = []
+    for text in texts:
+        words = text.split()
+        seq = []
+        for word in words:
+            index = word_index.get(word)
+            # Only include if index exists and is less than num_words limit
+            if index is not None and index < num_words:
+                seq.append(index)
+        sequences.append(seq)
+    return sequences
+
 # ---------------------------------------------------------------------------
 # Prediction
 # ---------------------------------------------------------------------------
 def predict_lstm(text: str) -> dict:
     """Predict using ONNX model."""
     cleaned = clean_text(text)
-    seq = tokenizer.texts_to_sequences([cleaned])
+    seq = texts_to_sequences_manual([cleaned], word_index, num_words)
     padded = pad_sequences_manual(seq, maxlen=MAX_LEN)
 
     result = session.run(None, {INPUT_NAME: padded})
